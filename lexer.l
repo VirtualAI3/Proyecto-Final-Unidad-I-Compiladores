@@ -1,11 +1,14 @@
 %option noyywrap
 %{
- /* definiciones de las constantes de manifiesto
- LT, LE, EQ, NE, GT, GE,
- IF, THEN, ELSE, ID, NUMERO, OPREL */
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+#include "y.tab.h"
+void yyerror(char *);
+/* Definiciones de las constantes de manifiesto LT, LE, EQ, NE, GT, GE, IF, THEN, ELSE, ID, NUMERO, OPREL */
 %}
 
-/* definiciones regulares */
+/* Definiciones regulares */
 
 delim [ \t\n]
 ws {delim}+
@@ -14,47 +17,69 @@ digito [0-9]
 numero {digito}+
 tipo (int|char|bool|float)
 id ({letra}|_)({letra}|{digito}|_)*
-real {digito}+(\.{digito}+)?(E[+−]?{digito}+)?
+real {digito}+(\.{digito}+)?(E[+\-]?{digito}+)?
+
 %%
 {ws} {/*Ignorar*/} // Ignorar espacios en blanco
-{tipo} {printf("TIPO: %s\n",yytext);}
-"if" { printf("IF\n"); }
-"else" { printf("ELSE\n"); }
-"while" { printf("WHILE\n"); }
-"do" { printf("DO\n"); }
-"break" { printf("BREAK\n"); }
-"true" { printf("TRUE\n"); }
-"false" { printf("FALSE\n"); }
-{id} {printf("ID: %s\n",yytext);}
-{numero} { printf("NUMERO: %s\n",yytext); }
-{real} {printf("Real: %s\n",yytext);}
-"+" { printf("SUMA\n"); }
-"-" { printf("RESTA\n"); }
-"*" { printf("MULTIPLICACION\n"); }
-"/" { printf("DIVISION\n"); }
-"{" { printf("L_LLAVE\n"); }
-"}" { printf("R_LLAVE\n"); }
-"[" { printf("L_CORCHETE\n"); }
-"]" { printf("R_CORCHETE\n"); }
-"(" { printf("PARENTESIS_IZQ\n"); }
-")" { printf("PARENTESIS_DER\n"); }
-";" { printf("PUNTO_Y_COMA\n"); }
-"=" { printf("ASIGNACION: =\n"); }
-"&&" { printf("COMP: AND\n"); }
-"||" { printf("COMP: OR\n"); }
-"!" { printf("COMP: NOT\n"); }
-"<" { printf("OPREL: <\n"); }
-"<=" { printf("OPREL: <=\n"); }
-">" { printf("OPREL: >\n"); }
-">=" { printf("OPREL: >=\n"); }
-"==" { printf("OPREL: ==\n"); }
-"!=" { printf("OPREL: !=\n"); }
-. { /* Manejar caracteres no reconocidos */ }
+{tipo} {printf("TIPO: %s\n",yytext); yylval.str = strdup(yytext); return BASIC;}
+"if" { printf("IF\n"); return IF;}
+"else" { printf("ELSE\n"); return ELSE;}
+"while" { printf("WHILE\n"); return WHILE;}
+"do" { printf("DO\n"); return DO;}
+"break" { printf("BREAK\n"); return BREAK;}
+"true" { printf("TRUE\n"); yylval.str = strdup(yytext); return TRUE;}
+"false" { printf("FALSE\n"); yylval.str = strdup(yytext); return FALSE;}
+{id} {printf("ID: %s\n",yytext); yylval.str = strdup(yytext); return ID;}
+{numero} { printf("NUMERO: %s\n",yytext); yylval.num = atoi(yytext); return NUM;}
+{real} {printf("Real: %s\n",yytext); yylval.real = atof(yytext); return REAL;}
+"+" { printf("SUMA\n"); return PLUS;}
+"-" { printf("RESTA\n"); return MINUS;}
+"*" { printf("MULTIPLICACION\n"); return TIMES;}
+"/" { printf("DIVISION\n"); return DIVIDE;}
+"{" { printf("L_LLAVE\n"); return LBRACE;}
+"}" { printf("R_LLAVE\n"); return RBRACE;}
+"[" { printf("L_CORCHETE\n"); return LBRACKET;}
+"]" { printf("R_CORCHETE\n"); return RBRACKET;}
+"(" { printf("PARENTESIS_IZQ\n"); return LPAREN;}
+")" { printf("PARENTESIS_DER\n"); return RPAREN;}
+";" { printf("PUNTO_Y_COMA\n"); return SEMICOLON;}
+"=" { printf("ASIGNACION: =\n"); return ASSIGN;}
+"&&" { printf("COMP: AND\n"); return AND;}
+"||" { printf("COMP: OR\n"); return OR;}
+"!" { printf("COMP: NOT\n"); return NOT;}
+"<" { printf("OPREL: <\n"); return LT;}
+"<=" { printf("OPREL: <=\n"); return LE;}
+">" { printf("OPREL: >\n"); return GT;}
+">=" { printf("OPREL: >=\n"); return GE;}
+"==" { printf("OPREL: ==\n"); return EQ;}
+"!=" { printf("OPREL: !=\n"); return NE;}
+. { fprintf(stderr, "Error: Caracter no reconocido: %s\n", yytext); return UNKNOWN; }
 %%
-int main()
-{
-    yyin = fopen("entrada.txt", "r");
-    yylex();
-    fclose(yyin);
+
+int main(int argc, char *argv[]) {
+    if (argc != 2) {
+        fprintf(stderr, "Uso: %s <archivo>\n", argv[0]);
+        return 1;
+    }
+
+    FILE *archivo = fopen(argv[1], "r");
+    if (!archivo) {
+        fprintf(stderr, "No se pudo abrir el archivo: %s\n", argv[1]);
+        return 1;
+    }
+
+    // Redirigir la entrada estándar al archivo
+    yyin = archivo;
+
+    // Llamar al parser
+    if (yyparse() == 0) {
+        printf("Análisis completo.\n");
+    } else {
+        fprintf(stderr, "Error en el análisis.\n");
+    }
+
+    // Cerrar el archivo
+    fclose(archivo);
+
     return 0;
 }
