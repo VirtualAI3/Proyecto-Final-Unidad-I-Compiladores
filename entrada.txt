@@ -1,12 +1,10 @@
-{
+{ 
   int x;
-  int y[10];
-  while (x < 10) {
-    if (x % 2 == 0) then {
-      y[x] = x * 2;
-    } else {
-      y[x] = x * 3;
-    }
-    x = x + 1;
-  }
+  float y; 
+    while ( x < 10 ) 
+    {   x = x + 1;
+        if ( y > 0.0 ) 
+        y = y - 0.5; 
+        else y = y + 0.5; 
+    } 
 }
