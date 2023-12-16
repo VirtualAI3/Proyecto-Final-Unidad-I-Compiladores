@@ -73,7 +73,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-
+extern FILE *yyin; 
 int yylex(void);
 void yyerror(char *);
 
@@ -1825,6 +1825,16 @@ yyreturn:
 /* Line 1675 of yacc.c  */
 #line 158 "parser.y"
 
+int main (){
+    yyin = fopen("entrada.txt", "r");
+    if (!yyin) {
+        fprintf(stderr, "No se pudo abrir el archivo de entrada\n");
+        return 1;
+    }
+    yyparse();
+    fclose(yyin);
+    return 0;
+}
 void yyerror(char *s) {
     fprintf(stderr, "Error: %s\n", s);
 }

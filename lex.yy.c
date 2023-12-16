@@ -1724,31 +1724,3 @@ int main()
 #endif
 #line 57 "lexer.l"
 
-
-int main(int argc, char *argv[]) {
-    if (argc != 2) {
-        fprintf(stderr, "Uso: %s <archivo>\n", argv[0]);
-        return 1;
-    }
-
-    FILE *archivo = fopen(argv[1], "r");
-    if (!archivo) {
-        fprintf(stderr, "No se pudo abrir el archivo: %s\n", argv[1]);
-        return 1;
-    }
-
-    // Redirigir la entrada estándar al archivo
-    yyin = archivo;
-
-    // Llamar al parser
-    if (yyparse() == 0) {
-        printf("Análisis completo.\n");
-    } else {
-        fprintf(stderr, "Error en el análisis.\n");
-    }
-
-    // Cerrar el archivo
-    fclose(archivo);
-
-    return 0;
-}
